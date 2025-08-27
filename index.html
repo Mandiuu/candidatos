@@ -180,6 +180,19 @@
         .region-box.destacada {
             border-width: 3px;
             font-weight: 600;
+            background-color: #003D7A;
+            border-color: #0066CC;
+        }
+
+        .region-box.destacada .region-name {
+            color: white;
+        }
+        
+        .region-box.destacada .region-count {
+            color: #0066CC;
+            background: white;
+            padding: 2px 8px;
+            border-radius: 12px;
         }
 
         .region-box.active {
@@ -1098,7 +1111,6 @@
                 btn.onclick = () => {
                     appState.currentPage = page;
                     render();
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
                 };
                 elements.pagination.appendChild(btn);
             };
@@ -1274,7 +1286,7 @@
                     }
                 }
             };
-            
+
             const sortedPartidos = Object.entries(partidoCounts).sort(([, a], [, b]) => b - a).slice(0, 10);
             const partidosLabels = sortedPartidos.map(([p]) => p);
             const partidosData = sortedPartidos.map(([, c]) => c);
@@ -1312,6 +1324,10 @@
             const sortedPactos = Object.entries(pactoCounts).sort(([, a], [, b]) => b - a);
             const pactosLabels = sortedPactos.map(([p]) => p);
             const pactosData = sortedPactos.map(([, c]) => c);
+            
+            const getRandomColor = () => '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
+            const pactoColors = pactosLabels.map(() => getRandomColor());
+
             if (charts.pactos) charts.pactos.destroy();
             charts.pactos = new Chart(ctxPactos, {
                 type: 'doughnut',
@@ -1319,7 +1335,7 @@
                     labels: pactosLabels,
                     datasets: [{
                         data: pactosData,
-                        backgroundColor: ['#0066CC', '#D52B1E', '#4CAF50', '#FFC107', '#9C27B0'],
+                        backgroundColor: pactoColors,
                     }]
                 },
                 options: {
@@ -1340,8 +1356,7 @@
                         }
                     }
                 }
-            }
-            );
+            });
             
             const tipoRegionData = {};
             const allRegions = new Set([...Object.keys(regionCounts)]);
