@@ -127,7 +127,8 @@
                 "rios rios"
                 "lagos lagos"
                 "aysen aysen"
-                "magallanes magallanes";
+                "magallanes magallanes"
+                "antartica antartica";
             gap: 8px;
             max-width: 400px;
             margin: 0 auto;
@@ -138,6 +139,25 @@
             min-height: 40px;
             transition: all 0.3s ease;
         }
+        
+        .map-region.arica { grid-area: arica; }
+        .map-region.tarapaca { grid-area: tarapaca; }
+        .map-region.antofagasta { grid-area: antofagasta; }
+        .map-region.atacama { grid-area: atacama; }
+        .map-region.coquimbo { grid-area: coquimbo; }
+        .map-region.valparaiso { grid-area: valparaiso; }
+        .map-region.metropolitana { grid-area: metropolitana; }
+        .map-region.ohiggins { grid-area: ohiggins; }
+        .map-region.maule { grid-area: maule; }
+        .map-region.nuble { grid-area: nuble; }
+        .map-region.biobio { grid-area: biobio; }
+        .map-region.araucania { grid-area: araucania; }
+        .map-region.rios { grid-area: rios; }
+        .map-region.lagos { grid-area: lagos; }
+        .map-region.aysen { grid-area: aysen; }
+        .map-region.magallanes { grid-area: magallanes; }
+        .map-region.antartica { grid-area: antartica; }
+
 
         .region-box {
             background: #E3F2FD;
@@ -217,6 +237,7 @@
             background: #f9f9f9;
             border-radius: 10px;
             padding: 20px;
+            min-height: 150px;
         }
 
         .region-details h4 {
@@ -323,6 +344,7 @@
         .detail-item {
             display: flex;
             justify-content: space-between;
+            align-items: center;
             padding: 10px 0;
             border-bottom: 1px solid #eee;
         }
@@ -334,6 +356,10 @@
         .detail-label {
             font-weight: 600;
             color: #333;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+            max-width: 60%;
         }
 
         .detail-value {
@@ -536,6 +562,7 @@
             .stats-grid { grid-template-columns: 1fr; }
             .filter-grid { grid-template-columns: 1fr; }
             .candidates-grid { grid-template-columns: 1fr; }
+            .map-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -549,27 +576,27 @@
       
         <div class="stats-grid" id="statsGrid">
             <div class="stat-card">
-                <div class="stat-number">1,134</div>
+                <div class="stat-number" id="totalCandidatos">0</div>
                 <div class="stat-label">Total Candidatos</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number">124</div>
+                <div class="stat-number" id="totalSenadores">0</div>
                 <div class="stat-label">Senadores</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number">1,010</div>
+                <div class="stat-number" id="totalDiputados">0</div>
                 <div class="stat-label">Diputados</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number">28</div>
+                <div class="stat-number" id="totalPartidos">0</div>
                 <div class="stat-label">Partidos</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number">13</div>
+                <div class="stat-number" id="totalPactos">0</div>
                 <div class="stat-label">Pactos</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number">17</div>
+                <div class="stat-number" id="totalRegiones">0</div>
                 <div class="stat-label">Regiones</div>
             </div>
         </div>
@@ -584,30 +611,25 @@
             <div class="filter-grid">
                 <div class="filter-group">
                     <label class="filter-label">Buscar candidato</label>
-                    <input type="text" class="filter-input" placeholder="Nombre..." onkeyup="updateFilter('search', this.value)">
+                    <input type="text" class="filter-input" id="nameInput" placeholder="Nombre..." list="candidateNames" onkeyup="updateFilter('search', this.value)">
+                    <datalist id="candidateNames"></datalist>
                 </div>
                 <div class="filter-group">
                     <label class="filter-label">Pacto</label>
-                    <select class="filter-select" onchange="updateFilter('pacto', this.value)">
+                    <select class="filter-select" id="pactoFilter" onchange="updateFilter('pacto', this.value)">
                         <option value="">Todos los pactos</option>
                     </select>
                 </div>
                 <div class="filter-group">
                     <label class="filter-label">Partido</label>
-                    <select class="filter-select" onchange="updateFilter('partido', this.value)">
+                    <select class="filter-select" id="partidoFilter" onchange="updateFilter('partido', this.value)">
                         <option value="">Todos los partidos</option>
                     </select>
                 </div>
                 <div class="filter-group">
                     <label class="filter-label">Región</label>
-                    <select class="filter-select" onchange="updateFilter('region', this.value)">
+                    <select class="filter-select" id="regionFilter" onchange="updateFilter('region', this.value)">
                         <option value="">Todas las regiones</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label class="filter-label">Distrito/Circunscripción</label>
-                    <select class="filter-select" onchange="updateFilter('ubicacion', this.value)">
-                        <option value="">Todos</option>
                     </select>
                 </div>
             </div>
@@ -616,109 +638,104 @@
         <div class="visualization-section">
             <h2 style="color: white; text-align: center; margin-bottom: 30px; font-size: 1.8em;">📊 Visualizaciones y Análisis</h2>
             
-            <!-- Mapa de Chile Mejorado -->
             <div class="map-container">
                 <h3 class="chart-title">🗺️ Mapa de Distribución por Región</h3>
                 <div class="map-grid">
                     <div class="map-chile">
-                        <!-- Norte -->
-                        <div class="map-region norte" data-region="ARICA Y PARINACOTA" style="grid-area: arica;">
+                        <div class="map-region arica" data-region="Arica y Parinacota">
                             <div class="region-box">
                                 <span class="region-name">Arica y Parinacota</span>
                                 <span class="region-count">0</span>
                             </div>
                         </div>
-                        <div class="map-region norte" data-region="TARAPACÁ" style="grid-area: tarapaca;">
+                        <div class="map-region tarapaca" data-region="Tarapacá">
                             <div class="region-box">
                                 <span class="region-name">Tarapacá</span>
                                 <span class="region-count">0</span>
                             </div>
                         </div>
-                        <div class="map-region norte" data-region="ANTOFAGASTA" style="grid-area: antofagasta;">
+                        <div class="map-region antofagasta" data-region="Antofagasta">
                             <div class="region-box">
                                 <span class="region-name">Antofagasta</span>
                                 <span class="region-count">0</span>
                             </div>
                         </div>
-                        <div class="map-region norte" data-region="ATACAMA" style="grid-area: atacama;">
+                        <div class="map-region atacama" data-region="Atacama">
                             <div class="region-box">
                                 <span class="region-name">Atacama</span>
                                 <span class="region-count">0</span>
                             </div>
                         </div>
-                        <div class="map-region norte" data-region="COQUIMBO" style="grid-area: coquimbo;">
+                        <div class="map-region coquimbo" data-region="Coquimbo">
                             <div class="region-box">
                                 <span class="region-name">Coquimbo</span>
                                 <span class="region-count">0</span>
                             </div>
                         </div>
                         
-                        <!-- Centro -->
-                        <div class="map-region centro" data-region="VALPARAÍSO" style="grid-area: valparaiso;">
+                        <div class="map-region valparaiso" data-region="Valparaíso">
                             <div class="region-box">
                                 <span class="region-name">Valparaíso</span>
                                 <span class="region-count">0</span>
                             </div>
                         </div>
-                        <div class="map-region centro" data-region="METROPOLITANA" style="grid-area: metropolitana;">
+                        <div class="map-region metropolitana" data-region="Metropolitana de Santiago">
                             <div class="region-box destacada">
                                 <span class="region-name">Metropolitana</span>
                                 <span class="region-count">0</span>
                             </div>
                         </div>
-                        <div class="map-region centro" data-region="O'HIGGINS" style="grid-area: ohiggins;">
+                        <div class="map-region ohiggins" data-region="O'Higgins">
                             <div class="region-box">
                                 <span class="region-name">O'Higgins</span>
                                 <span class="region-count">0</span>
                             </div>
                         </div>
-                        <div class="map-region centro" data-region="MAULE" style="grid-area: maule;">
+                        <div class="map-region maule" data-region="Maule">
                             <div class="region-box">
                                 <span class="region-name">Maule</span>
                                 <span class="region-count">0</span>
                             </div>
                         </div>
-                        <div class="map-region centro" data-region="ÑUBLE" style="grid-area: nuble;">
+                        <div class="map-region nuble" data-region="Ñuble">
                             <div class="region-box">
                                 <span class="region-name">Ñuble</span>
                                 <span class="region-count">0</span>
                             </div>
                         </div>
                         
-                        <!-- Sur -->
-                        <div class="map-region sur" data-region="BIOBÍO" style="grid-area: biobio;">
+                        <div class="map-region biobio" data-region="Biobío">
                             <div class="region-box">
                                 <span class="region-name">Biobío</span>
                                 <span class="region-count">0</span>
                             </div>
                         </div>
-                        <div class="map-region sur" data-region="ARAUCANÍA" style="grid-area: araucania;">
+                        <div class="map-region araucania" data-region="Araucanía">
                             <div class="region-box">
                                 <span class="region-name">Araucanía</span>
                                 <span class="region-count">0</span>
                             </div>
                         </div>
-                        <div class="map-region sur" data-region="LOS RÍOS" style="grid-area: rios;">
+                        <div class="map-region rios" data-region="Los Ríos">
                             <div class="region-box">
                                 <span class="region-name">Los Ríos</span>
                                 <span class="region-count">0</span>
                             </div>
                         </div>
-                        <div class="map-region sur" data-region="LOS LAGOS" style="grid-area: lagos;">
+                        <div class="map-region lagos" data-region="Los Lagos">
                             <div class="region-box">
                                 <span class="region-name">Los Lagos</span>
                                 <span class="region-count">0</span>
                             </div>
                         </div>
                         
-                        <!-- Extremo Sur -->
-                        <div class="map-region extremo-sur" data-region="AYSÉN" style="grid-area: aysen;">
+                        <div class="map-region aysen" data-region="Aysén">
                             <div class="region-box">
                                 <span class="region-name">Aysén</span>
                                 <span class="region-count">0</span>
                             </div>
                         </div>
-                        <div class="map-region extremo-sur" data-region="MAGALLANES" style="grid-area: magallanes;">
+                        <div class="map-region magallanes" data-region="Magallanes">
                             <div class="region-box">
                                 <span class="region-name">Magallanes</span>
                                 <span class="region-count">0</span>
@@ -808,637 +825,599 @@
         <div class="pagination" id="pagination"></div>
     </div>
 
-    <!-- Cargar Chart.js para gráficos -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.0/papaparse.min.js"></script>
     
     <script>
-        // Base de datos integrada de candidatos
-        // Para mantener el archivo manejable, incluyo una muestra representativa
-        // En producción, estos datos vendrían de una API o base de datos
+        const regionesMap = {
+            'Arica y Parinacota': 'REGIÓN DE ARICA Y PARINACOTA',
+            'Tarapacá': 'REGIÓN DE TARAPACÁ',
+            'Antofagasta': 'REGIÓN DE ANTOFAGASTA',
+            'Atacama': 'REGIÓN DE ATACAMA',
+            'Coquimbo': 'REGIÓN DE COQUIMBO',
+            'Valparaíso': 'REGIÓN DE VALPARAÍSO',
+            'Metropolitana de Santiago': 'REGIÓN METROPOLITANA DE SANTIAGO',
+            "O'Higgins": "REGIÓN DEL LIBERTADOR GENERAL BERNARDO O'HIGGINS",
+            'Maule': 'REGIÓN DEL MAULE',
+            'Ñuble': 'REGIÓN DE ÑUBLE',
+            'Biobío': 'REGIÓN DEL BIOBÍO',
+            'Araucanía': 'REGIÓN DE LA ARAUCANÍA',
+            'Los Ríos': 'REGIÓN DE LOS RÍOS',
+            'Los Lagos': 'REGIÓN DE LOS LAGOS',
+            'Aysén': 'REGIÓN DE AYSÉN DEL GENERAL CARLOS IBÁÑEZ DEL CAMPO',
+            'Magallanes': 'REGIÓN DE MAGALLANES Y DE LA ANTÁRTICA CHILENA'
+        };
+
+        const REVERSE_REGIONES_MAP = Object.fromEntries(
+            Object.entries(regionesMap).map(([key, value]) => [value, key])
+        );
+
+        const SENADORES_URL = 'Candidatos.xlsx - Senadores.csv';
+        const DIPUTADOS_URL = 'Candidatos.xlsx - Diputados.csv';
+
+        const CANDIDATES_PER_PAGE = 10;
         
-        const DATABASE = {
-            senadores: [
-                {n:"JOSE MIGUEL DURANA SEMIR",p:"UDI",pa:"",r:"REGIÓN DE ARICA Y PARINACOTA",u:"1",pc:"CHILE GRANDE Y UNIDO",o:1},
-                {n:"ENRIQUE SEGUNDO LEE FLORES",p:"IND",pa:"PDEMO",r:"REGIÓN DE ARICA Y PARINACOTA",u:"1",pc:"CHILE GRANDE Y UNIDO",o:2},
-                {n:"SANDRA CECILIA ZAPATA VELASQUEZ",p:"IND",pa:"RN",r:"REGIÓN DE ARICA Y PARINACOTA",u:"1",pc:"CHILE GRANDE Y UNIDO",o:3},
-                {n:"CINTHIA VARGAS MORALES",p:"IND",pa:"PS",r:"REGIÓN DE ARICA Y PARINACOTA",u:"1",pc:"UNIDAD POR CHILE",o:1},
-                {n:"VLADO MIROSEVIC",p:"PL",pa:"",r:"REGIÓN DE ARICA Y PARINACOTA",u:"1",pc:"UNIDAD POR CHILE",o:2},
-                {n:"CARMEN HERTZ",p:"PC",pa:"",r:"REGIÓN DE ARICA Y PARINACOTA",u:"1",pc:"UNIDAD POR CHILE",o:3},
-                {n:"FRIEDRICH MENCIA",p:"PDG",pa:"",r:"REGIÓN DE ARICA Y PARINACOTA",u:"1",pc:"PARTIDO DE LA GENTE",o:1},
-                {n:"MAURICIO PAREDES",p:"FRVS",pa:"",r:"REGIÓN DE ARICA Y PARINACOTA",u:"1",pc:"VERDES, REGIONALISTAS Y HUMANISTAS",o:1},
-                {n:"LUZ EBENSPERGER ORREGO",p:"UDI",pa:"",r:"REGIÓN DE TARAPACÁ",u:"2",pc:"CHILE GRANDE Y UNIDO",o:1},
-                {n:"LUCRECIA MENA ACOSTA",p:"RN",pa:"",r:"REGIÓN DE TARAPACÁ",u:"2",pc:"CHILE GRANDE Y UNIDO",o:2}
-            ],
-            diputados: [
-                {n:"JUAN CARLOS CHINGA PALMA",p:"IND",pa:"RN",r:"REGIÓN DE ARICA Y PARINACOTA",u:"1",pc:"CHILE GRANDE Y UNIDO",o:1},
-                {n:"SEBASTIAN HUERTA GONZALEZ",p:"UDI",pa:"",r:"REGIÓN DE ARICA Y PARINACOTA",u:"1",pc:"CHILE GRANDE Y UNIDO",o:2},
-                {n:"VIVIANA RUBIO TORRES",p:"EVOPOLI",pa:"",r:"REGIÓN DE ARICA Y PARINACOTA",u:"1",pc:"CHILE GRANDE Y UNIDO",o:3},
-                {n:"MATÍAS RAMÍREZ",p:"PC",pa:"",r:"REGIÓN DE ARICA Y PARINACOTA",u:"1",pc:"UNIDAD POR CHILE",o:1},
-                {n:"MARTA TALQUINO",p:"IND",pa:"PPD",r:"REGIÓN DE ARICA Y PARINACOTA",u:"1",pc:"UNIDAD POR CHILE",o:2},
-                {n:"RODRIGO ARRATIA RIVAS",p:"PS",pa:"",r:"REGIÓN DE TARAPACÁ",u:"2",pc:"UNIDAD POR CHILE",o:1},
-                {n:"SERGIO CAMPOS",p:"UDI",pa:"",r:"REGIÓN DE TARAPACÁ",u:"2",pc:"CHILE GRANDE Y UNIDO",o:1},
-                {n:"CARLOS PAIROA",p:"RN",pa:"",r:"REGIÓN DE TARAPACÁ",u:"2",pc:"CHILE GRANDE Y UNIDO",o:2},
-                {n:"MAURICIO SORIA",p:"EVOPOLI",pa:"",r:"REGIÓN DE TARAPACÁ",u:"2",pc:"CHILE GRANDE Y UNIDO",o:3},
-                {n:"JORGE SAAVEDRA",p:"PPD",pa:"",r:"REGIÓN DE TARAPACÁ",u:"2",pc:"UNIDAD POR CHILE",o:2}
-            ]
+        let DATABASE = {
+            senadores: [],
+            diputados: []
+        };
+        
+        let appState = {
+            tab: 'todos',
+            filters: {
+                search: '',
+                pacto: '',
+                partido: '',
+                region: '',
+                ubicacion: ''
+            },
+            currentPage: 1,
+            filteredCandidates: [],
+            totalCandidates: 0,
+            senadoresCount: 0,
+            diputadosCount: 0,
+            pactosCount: 0,
+            partidosCount: 0,
+            regionesCount: 0
         };
 
-        // Generar más candidatos para simular la base completa
-        function generarCandidatosCompletos() {
-            const regiones = [
-                "REGIÓN DE ARICA Y PARINACOTA", "REGIÓN DE TARAPACÁ", "REGIÓN DE ANTOFAGASTA",
-                "REGIÓN DE ATACAMA", "REGIÓN DE COQUIMBO", "REGIÓN DE VALPARAÍSO",
-                "REGIÓN METROPOLITANA DE SANTIAGO", "REGIÓN DEL LIBERTADOR GENERAL BERNARDO O'HIGGINS",
-                "REGIÓN DEL MAULE", "REGIÓN DE ÑUBLE", "REGIÓN DEL BIOBÍO",
-                "REGIÓN DE LA ARAUCANÍA", "REGIÓN DE LOS RÍOS", "REGIÓN DE LOS LAGOS",
-                "REGIÓN DE AYSÉN DEL GENERAL CARLOS IBÁÑEZ DEL CAMPO", "REGIÓN DE MAGALLANES Y DE LA ANTÁRTICA CHILENA"
-            ];
-            
-            const pactos = [
-                "CHILE GRANDE Y UNIDO", "UNIDAD POR CHILE", "PARTIDO DE LA GENTE",
-                "VERDES, REGIONALISTAS Y HUMANISTAS", "IZQUIERDA ECOLOGISTA POPULAR",
-                "CAMBIO POR CHILE", "INDEPENDIENTE", "PARTIDO ECOLOGISTA VERDE"
-            ];
-            
-            const partidos = [
-                "UDI", "RN", "EVÓPOLI", "PS", "PPD", "PC", "DC", "PR", "PL", 
-                "FRVS", "CS", "PH", "PDG", "IND", "RD"
-            ];
-            
-            const nombres = [
-                "MARÍA", "JUAN", "PEDRO", "CARMEN", "JOSÉ", "ANA", "LUIS", 
-                "PATRICIA", "CARLOS", "ROSA", "FERNANDO", "CLAUDIA"
-            ];
-            
-            const apellidos = [
-                "GONZÁLEZ", "RODRÍGUEZ", "GARCÍA", "MARTÍNEZ", "LÓPEZ", 
-                "SÁNCHEZ", "PÉREZ", "GÓMEZ", "MARTIN", "JIMÉNEZ", "RUIZ", "DÍAZ"
-            ];
+        const elements = {
+            totalCandidatos: document.getElementById('totalCandidatos'),
+            totalSenadores: document.getElementById('totalSenadores'),
+            totalDiputados: document.getElementById('totalDiputados'),
+            totalPactos: document.getElementById('totalPactos'),
+            totalPartidos: document.getElementById('totalPartidos'),
+            totalRegiones: document.getElementById('totalRegiones'),
+            pactoFilter: document.getElementById('pactoFilter'),
+            partidoFilter: document.getElementById('partidoFilter'),
+            regionFilter: document.getElementById('regionFilter'),
+            candidatesGrid: document.getElementById('candidatesGrid'),
+            resultsInfo: document.getElementById('resultsInfo'),
+            pagination: document.getElementById('pagination'),
+            regionDetails: document.getElementById('regionDetails'),
+            topPartidos: document.getElementById('topPartidos'),
+            topRegiones: document.getElementById('topRegiones'),
+            topPactos: document.getElementById('topPactos'),
+            nameInput: document.getElementById('nameInput'),
+            candidateNamesDatalist: document.getElementById('candidateNames')
+        };
+        
+        let charts = {};
 
-            // Completar hasta 124 senadores
-            while (DATABASE.senadores.length < 124) {
-                const nombre = `${nombres[Math.floor(Math.random() * nombres.length)]} ${apellidos[Math.floor(Math.random() * apellidos.length)]} ${apellidos[Math.floor(Math.random() * apellidos.length)]}`;
-                const region = regiones[Math.floor(Math.random() * regiones.length)];
-                const pacto = pactos[Math.floor(Math.random() * pactos.length)];
-                const partido = partidos[Math.floor(Math.random() * partidos.length)];
+        // Nueva función para cargar los datos desde CSV
+        async function loadData() {
+            try {
+                elements.resultsInfo.textContent = 'Cargando datos...';
                 
-                DATABASE.senadores.push({
-                    n: nombre,
-                    p: partido,
-                    pa: Math.random() > 0.7 ? partidos[Math.floor(Math.random() * partidos.length)] : "",
-                    r: region,
-                    u: String(Math.floor(Math.random() * 19) + 1),
-                    pc: pacto,
-                    o: Math.floor(Math.random() * 5) + 1
-                });
-            }
+                const senadores = await Papa.parsePromise(SENADORES_URL);
+                const diputados = await Papa.parsePromise(DIPUTADOS_URL);
 
-            // Completar hasta 1010 diputados
-            while (DATABASE.diputados.length < 1010) {
-                const nombre = `${nombres[Math.floor(Math.random() * nombres.length)]} ${apellidos[Math.floor(Math.random() * apellidos.length)]} ${apellidos[Math.floor(Math.random() * apellidos.length)]}`;
-                const region = regiones[Math.floor(Math.random() * regiones.length)];
-                const pacto = pactos[Math.floor(Math.random() * pactos.length)];
-                const partido = partidos[Math.floor(Math.random() * partidos.length)];
-                
-                DATABASE.diputados.push({
-                    n: nombre,
-                    p: partido,
-                    pa: Math.random() > 0.7 ? partidos[Math.floor(Math.random() * partidos.length)] : "",
-                    r: region,
-                    u: String(Math.floor(Math.random() * 28) + 1),
-                    pc: pacto,
-                    o: Math.floor(Math.random() * 5) + 1
-                });
+                DATABASE.senadores = senadores.data.filter(c => c.NOMBRE && c.NOMBRE.trim() !== '').map(c => ({
+                    n: c.NOMBRE,
+                    p: c.PARTIDO || 'Independiente',
+                    pa: c['PARTIDO ASOCIADO'],
+                    r: c.REGIÓN,
+                    u: c.CIRCUNSCRIPCIÓN || c.DISTRITO,
+                    pc: c.PACTO || 'Sin Pacto',
+                    o: c.ORDEN,
+                    tipo: 'senador'
+                }));
+
+                DATABASE.diputados = diputados.data.filter(c => c.NOMBRE && c.NOMBRE.trim() !== '').map(c => ({
+                    n: c.NOMBRE,
+                    p: c.PARTIDO || 'Independiente',
+                    pa: c['PARTIDO ASOCIADO'],
+                    r: c.REGIÓN,
+                    u: c.CIRCUNSCRIPCIÓN || c.DISTRITO,
+                    pc: c.PACTO || 'Sin Pacto',
+                    o: c.ORDEN,
+                    tipo: 'diputado'
+                }));
+
+                calculateStats();
+                populateNameDatalist();
+                filterCandidates();
+
+            } catch (error) {
+                console.error("Error al cargar los datos:", error);
+                elements.resultsInfo.textContent = "Error al cargar los datos. Asegúrate de que los archivos 'Candidatos.xlsx - Senadores.csv' y 'Candidatos.xlsx - Diputados.csv' estén en la misma carpeta.";
             }
         }
 
-        // Generar datos completos al cargar
-        generarCandidatosCompletos();
-
-        // Variables globales
-        let allData = [];
-        let filteredData = [];
-        let currentPage = 1;
-        const itemsPerPage = 50;
-        let activeTab = 'todos';
-        let filters = {
-            search: '',
-            partido: '',
-            region: '',
-            ubicacion: '',
-            pacto: ''
+        // Adaptación de Papa Parse para usar async/await
+        Papa.parsePromise = function(url) {
+            return new Promise(function(resolve, reject) {
+                Papa.parse(url, {
+                    download: true,
+                    header: true,
+                    complete: function(results) {
+                        resolve(results);
+                    },
+                    error: function(err) {
+                        reject(err);
+                    }
+                });
+            });
         };
-        let charts = {};  // Para almacenar referencias a los gráficos
+        
+        function calculateStats() {
+            const allCandidates = [...DATABASE.senadores, ...DATABASE.diputados];
+            const pactos = new Set(allCandidates.map(c => c.pc).filter(Boolean));
+            const partidos = new Set(allCandidates.map(c => c.p).filter(Boolean));
+            const regiones = new Set(allCandidates.map(c => c.r).filter(Boolean));
 
-        // Inicializar aplicación
-        document.addEventListener('DOMContentLoaded', function() {
-            // Convertir datos a formato uniforme
-            allData = [
-                ...DATABASE.senadores.map(s => ({
-                    nombre: s.n,
-                    tipo: 'Senador',
-                    partido: s.p,
-                    partidoAsociado: s.pa,
-                    region: s.r,
-                    ubicacion: s.u,
-                    pacto: s.pc,
-                    orden: s.o
-                })),
-                ...DATABASE.diputados.map(d => ({
-                    nombre: d.n,
-                    tipo: 'Diputado',
-                    partido: d.p,
-                    partidoAsociado: d.pa,
-                    region: d.r,
-                    ubicacion: d.u,
-                    pacto: d.pc,
-                    orden: d.o
-                }))
-            ];
-
-            console.log(`✅ ${allData.length} candidatos cargados desde la base de datos integrada`);
+            appState.totalCandidates = allCandidates.length;
+            appState.senadoresCount = DATABASE.senadores.length;
+            appState.diputadosCount = DATABASE.diputados.length;
+            appState.pactosCount = pactos.size;
+            appState.partidosCount = partidos.size;
+            appState.regionesCount = regiones.size;
             
-            initializeApp();
-        });
-
-        function initializeApp() {
-            updateFiltersOptions();
-            applyFilters();
-            createVisualizations();
+            updateStatsUI();
+            
+            populateFilters(pactos, partidos, regiones);
+            updateVisualizations(allCandidates);
         }
 
-        function createVisualizations() {
-            // Primero actualizar el mapa
-            updateChileMap();
-            
-            // Luego el resto de visualizaciones
-            // Procesar datos para visualizaciones
-            const partidosCount = {};
-            const regionesCount = {};
-            const pactosCount = {};
-            const regionTipoCount = {};
+        function updateStatsUI() {
+            elements.totalCandidatos.textContent = appState.totalCandidates;
+            elements.totalSenadores.textContent = appState.senadoresCount;
+            elements.totalDiputados.textContent = appState.diputadosCount;
+            elements.totalPactos.textContent = appState.pactosCount;
+            elements.totalPartidos.textContent = appState.partidosCount;
+            elements.totalRegiones.textContent = appState.regionesCount;
+        }
 
-            allData.forEach(c => {
-                // Contar por partido
-                if (c.partido) {
-                    partidosCount[c.partido] = (partidosCount[c.partido] || 0) + 1;
-                }
-                
-                // Contar por región
-                const regionSimple = c.region.replace('REGIÓN DE ', '').replace('REGIÓN DEL ', '').replace('LA ', '');
-                regionesCount[regionSimple] = (regionesCount[regionSimple] || 0) + 1;
-                
-                // Contar por pacto
-                if (c.pacto) {
-                    pactosCount[c.pacto] = (pactosCount[c.pacto] || 0) + 1;
-                }
-                
-                // Contar por región y tipo
-                if (!regionTipoCount[regionSimple]) {
-                    regionTipoCount[regionSimple] = { senadores: 0, diputados: 0 };
-                }
-                if (c.tipo === 'Senador') {
-                    regionTipoCount[regionSimple].senadores++;
-                } else {
-                    regionTipoCount[regionSimple].diputados++;
-                }
+        function populateFilters(pactos, partidos, regiones) {
+            const sortedPactos = Array.from(pactos).sort();
+            const sortedPartidos = Array.from(partidos).sort();
+            const sortedRegiones = Array.from(regiones).map(r => REVERSE_REGIONES_MAP[r] || r).sort();
+
+            const createOptions = (select, items) => {
+                items.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item;
+                    option.textContent = item;
+                    select.appendChild(option);
+                });
+            };
+
+            elements.pactoFilter.innerHTML = '<option value="">Todos los pactos</option>';
+            createOptions(elements.pactoFilter, sortedPactos);
+
+            elements.partidoFilter.innerHTML = '<option value="">Todos los partidos</option>';
+            createOptions(elements.partidoFilter, sortedPartidos);
+
+            elements.regionFilter.innerHTML = '<option value="">Todas las regiones</option>';
+            createOptions(elements.regionFilter, sortedRegiones);
+        }
+
+        function populateNameDatalist() {
+            const allCandidates = [...DATABASE.senadores, ...DATABASE.diputados];
+            const uniqueNames = new Set(allCandidates.map(c => c.n));
+            elements.candidateNamesDatalist.innerHTML = '';
+            uniqueNames.forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                elements.candidateNamesDatalist.appendChild(option);
+            });
+        }
+
+        function filterCandidates() {
+            let candidates = [];
+            if (appState.tab === 'todos') {
+                candidates = [...DATABASE.senadores, ...DATABASE.diputados];
+            } else if (appState.tab === 'senadores') {
+                candidates = DATABASE.senadores;
+            } else if (appState.tab === 'diputados') {
+                candidates = DATABASE.diputados;
+            }
+
+            const { search, pacto, partido, region } = appState.filters;
+
+            const filtered = candidates.filter(c => {
+                const matchesSearch = !search || (c.n && c.n.toLowerCase().includes(search.toLowerCase()));
+                const matchesPacto = !pacto || (c.pc && c.pc.toLowerCase() === pacto.toLowerCase());
+                const matchesPartido = !partido || (c.p && c.p.toLowerCase() === partido.toLowerCase());
+                const matchesRegion = !region || (REVERSE_REGIONES_MAP[c.r] || c.r).toLowerCase() === region.toLowerCase();
+                return matchesSearch && matchesPacto && matchesPartido && matchesRegion;
             });
 
-            // Ordenar y obtener top datos
-            const sortedPartidos = Object.entries(partidosCount).sort((a, b) => b[1] - a[1]);
-            const sortedRegiones = Object.entries(regionesCount).sort((a, b) => b[1] - a[1]);
-            const sortedPactos = Object.entries(pactosCount).sort((a, b) => b[1] - a[1]);
+            appState.filteredCandidates = filtered;
+            appState.currentPage = 1; 
+            render();
+        }
 
-            // Crear gráfico de partidos (horizontal bar)
+        function render() {
+            renderCandidates();
+            renderPagination();
+            updateResultsInfo();
+        }
+
+        function renderCandidates() {
+            const start = (appState.currentPage - 1) * CANDIDATES_PER_PAGE;
+            const end = start + CANDIDATES_PER_PAGE;
+            const candidatesToShow = appState.filteredCandidates.slice(start, end);
+            
+            elements.candidatesGrid.innerHTML = '';
+            
+            if (candidatesToShow.length === 0) {
+                elements.candidatesGrid.innerHTML = `<div style="text-align: center; color: #fff; grid-column: 1 / -1; font-size: 1.2em;">No se encontraron candidatos con los filtros seleccionados.</div>`;
+                return;
+            }
+
+            candidatesToShow.forEach(c => {
+                const card = document.createElement('div');
+                card.className = `candidate-card ${c.tipo}`;
+                card.innerHTML = `
+                    <div class="candidate-name">${c.n}
+                        <span class="cargo-badge ${c.tipo}">${c.tipo.charAt(0).toUpperCase() + c.tipo.slice(1)}</span>
+                    </div>
+                    <div class="candidate-party">${c.pc || 'Sin Pacto'}</div>
+                    <div class="candidate-info">
+                        <strong>Partido:</strong> ${c.p || 'Sin Partido'}<br>
+                        <strong>Región:</strong> ${REVERSE_REGIONES_MAP[c.r] || c.r || 'No especificada'}<br>
+                        <strong>${c.tipo === 'senador' ? 'Circunscripción' : 'Distrito'}:</strong> ${c.u || 'No especificada'}
+                    </div>
+                `;
+                elements.candidatesGrid.appendChild(card);
+            });
+        }
+
+        function renderPagination() {
+            elements.pagination.innerHTML = '';
+            const totalPages = Math.ceil(appState.filteredCandidates.length / CANDIDATES_PER_PAGE);
+
+            if (totalPages <= 1) return;
+
+            const createButton = (text, page, isActive, isDisabled) => {
+                const btn = document.createElement('button');
+                btn.textContent = text;
+                if (isActive) btn.classList.add('active');
+                btn.disabled = isDisabled;
+                btn.onclick = () => {
+                    appState.currentPage = page;
+                    render();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                };
+                elements.pagination.appendChild(btn);
+            };
+
+            createButton('Anterior', appState.currentPage - 1, false, appState.currentPage === 1);
+
+            let startPage = Math.max(1, appState.currentPage - 2);
+            let endPage = Math.min(totalPages, appState.currentPage + 2);
+
+            if (appState.currentPage <= 3) endPage = Math.min(5, totalPages);
+            if (appState.currentPage > totalPages - 3) startPage = Math.max(1, totalPages - 4);
+            
+            if (startPage > 1) {
+                createButton('1', 1, false, false);
+                if (startPage > 2) {
+                    const dots = document.createElement('span');
+                    dots.textContent = '...';
+                    dots.style.padding = '0 5px';
+                    dots.style.color = 'white';
+                    elements.pagination.appendChild(dots);
+                }
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                createButton(i, i, i === appState.currentPage, false);
+            }
+
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    const dots = document.createElement('span');
+                    dots.textContent = '...';
+                    dots.style.padding = '0 5px';
+                    dots.style.color = 'white';
+                    elements.pagination.appendChild(dots);
+                }
+                createButton(totalPages, totalPages, false, false);
+            }
+
+            createButton('Siguiente', appState.currentPage + 1, false, appState.currentPage === totalPages);
+        }
+
+        function updateResultsInfo() {
+            const start = (appState.currentPage - 1) * CANDIDATES_PER_PAGE + 1;
+            const end = Math.min(start + CANDIDATES_PER_PAGE - 1, appState.filteredCandidates.length);
+            const total = appState.filteredCandidates.length;
+
+            if (total === 0) {
+                elements.resultsInfo.textContent = 'No se encontraron resultados.';
+            } else {
+                elements.resultsInfo.textContent = `Mostrando ${start} - ${end} de ${total} candidatos`;
+            }
+        }
+
+        function setTab(tab) {
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`.tab-button[onclick="setTab('${tab}')"]`).classList.add('active');
+            appState.tab = tab;
+            filterCandidates();
+        }
+
+        function updateFilter(key, value) {
+            appState.filters[key] = value;
+            filterCandidates();
+        }
+        
+        function updateVisualizations(candidates) {
+            const counts = (arr, key) => arr.reduce((acc, c) => {
+                const k = key(c);
+                if (k) acc[k] = (acc[k] || 0) + 1;
+                return acc;
+            }, {});
+
+            const regionCounts = counts(candidates, c => REVERSE_REGIONES_MAP[c.r] || c.r);
+            const partidoCounts = counts(candidates, c => c.p);
+            const pactoCounts = counts(candidates, c => c.pc);
+            
+            updateMap(regionCounts);
+            updateCharts(partidoCounts, regionCounts, pactoCounts);
+            updateTopLists(partidoCounts, regionCounts, pactoCounts);
+        }
+
+        function updateMap(regionCounts) {
+            const regionElements = document.querySelectorAll('.map-region');
+            regionElements.forEach(regionEl => {
+                const regionName = regionEl.getAttribute('data-region');
+                const countEl = regionEl.querySelector('.region-count');
+                const boxEl = regionEl.querySelector('.region-box');
+                const count = regionCounts[regionName] || 0;
+                
+                countEl.textContent = count;
+                boxEl.style.backgroundColor = getRegionColor(count);
+                
+                regionEl.onclick = () => showRegionDetails(regionName);
+            });
+        }
+        
+        function getRegionColor(count) {
+            if (count > 120) return '#0D47A1';
+            if (count > 90) return '#1976D2';
+            if (count > 60) return '#42A5F5';
+            if (count > 30) return '#90CAF9';
+            if (count > 0) return '#E3F2FD';
+            return '#f0f0f0';
+        }
+
+        function showRegionDetails(regionName) {
+            const allCandidates = [...DATABASE.senadores, ...DATABASE.diputados];
+            const regionCandidates = allCandidates.filter(c => (REVERSE_REGIONES_MAP[c.r] || c.r) === regionName);
+
+            const senadoresCount = regionCandidates.filter(c => c.tipo === 'senador').length;
+            const diputadosCount = regionCandidates.filter(c => c.tipo === 'diputado').length;
+            const partidosCount = new Set(regionCandidates.map(c => c.p)).size;
+            const pactosCount = new Set(regionCandidates.map(c => c.pc)).size;
+
+            elements.regionDetails.innerHTML = `
+                <h4>Estadísticas de ${regionName}</h4>
+                <div class="region-stats-grid">
+                    <div class="region-stat">
+                        <div class="region-stat-value">${regionCandidates.length}</div>
+                        <div class="region-stat-label">Candidatos</div>
+                    </div>
+                    <div class="region-stat">
+                        <div class="region-stat-value">${senadoresCount}</div>
+                        <div class="region-stat-label">Senadores</div>
+                    </div>
+                    <div class="region-stat">
+                        <div class="region-stat-value">${diputadosCount}</div>
+                        <div class="region-stat-label">Diputados</div>
+                    </div>
+                    <div class="region-stat">
+                        <div class="region-stat-value">${partidosCount}</div>
+                        <div class="region-stat-label">Partidos</div>
+                    </div>
+                </div>
+                <p style="margin-top: 15px;">Haz clic <a href="#" onclick="updateFilter('region', '${regionName}'); return false;">aquí</a> para filtrar y ver los candidatos de esta región.</p>
+            `;
+            
+            document.querySelectorAll('.region-box').forEach(box => box.classList.remove('active'));
+            const regionBox = document.querySelector(`.map-region[data-region="${regionName}"] .region-box`);
+            if (regionBox) {
+                regionBox.classList.add('active');
+            }
+        }
+
+        function updateCharts(partidoCounts, regionCounts, pactoCounts) {
             const ctxPartidos = document.getElementById('chartPartidos').getContext('2d');
+            const ctxRegiones = document.getElementById('chartRegiones').getContext('2d');
+            const ctxPactos = document.getElementById('chartPactos').getContext('2d');
+            const ctxTipoRegion = document.getElementById('chartTipoRegion').getContext('2d');
+            
+            const commonOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { display: false },
+                        ticks: {
+                            color: '#666'
+                        }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: {
+                            color: '#666',
+                            autoSkip: true,
+                            maxRotation: 45,
+                            minRotation: 45
+                        }
+                    }
+                }
+            };
+            
+            const sortedPartidos = Object.entries(partidoCounts).sort(([, a], [, b]) => b - a).slice(0, 10);
+            const partidosLabels = sortedPartidos.map(([p]) => p);
+            const partidosData = sortedPartidos.map(([, c]) => c);
             if (charts.partidos) charts.partidos.destroy();
             charts.partidos = new Chart(ctxPartidos, {
                 type: 'bar',
                 data: {
-                    labels: sortedPartidos.slice(0, 10).map(p => p[0]),
+                    labels: partidosLabels,
                     datasets: [{
-                        label: 'Número de candidatos',
-                        data: sortedPartidos.slice(0, 10).map(p => p[1]),
-                        backgroundColor: 'rgba(0, 102, 204, 0.7)',
-                        borderColor: 'rgba(0, 102, 204, 1)',
-                        borderWidth: 2
+                        label: 'Candidatos',
+                        data: partidosData,
+                        backgroundColor: '#0066CC',
                     }]
                 },
-                options: {
-                    indexAxis: 'y',
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        x: {
-                            beginAtZero: true,
-                            grid: { display: false }
-                        }
-                    }
-                }
+                options: commonOptions
             });
 
-            // Crear gráfico de regiones (bar vertical)
-            const ctxRegiones = document.getElementById('chartRegiones').getContext('2d');
+            const sortedRegiones = Object.entries(regionCounts).sort(([, a], [, b]) => b - a);
+            const regionesLabels = sortedRegiones.map(([r]) => r.split(' ')[0]);
+            const regionesData = sortedRegiones.map(([, c]) => c);
             if (charts.regiones) charts.regiones.destroy();
             charts.regiones = new Chart(ctxRegiones, {
                 type: 'bar',
                 data: {
-                    labels: sortedRegiones.map(r => r[0].length > 15 ? r[0].substring(0, 15) + '...' : r[0]),
+                    labels: regionesLabels,
                     datasets: [{
-                        label: 'Total candidatos',
-                        data: sortedRegiones.map(r => r[1]),
-                        backgroundColor: 'rgba(213, 43, 30, 0.7)',
-                        borderColor: 'rgba(213, 43, 30, 1)',
-                        borderWidth: 2
+                        label: 'Candidatos',
+                        data: regionesData,
+                        backgroundColor: '#D52B1E',
                     }]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        x: {
-                            ticks: {
-                                autoSkip: false,
-                                maxRotation: 45,
-                                minRotation: 45,
-                                font: { size: 10 }
-                            }
-                        },
-                        y: { beginAtZero: true }
-                    }
-                }
+                options: commonOptions
             });
 
-            // Crear gráfico de pactos (doughnut)
-            const ctxPactos = document.getElementById('chartPactos').getContext('2d');
+            const sortedPactos = Object.entries(pactoCounts).sort(([, a], [, b]) => b - a);
+            const pactosLabels = sortedPactos.map(([p]) => p);
+            const pactosData = sortedPactos.map(([, c]) => c);
             if (charts.pactos) charts.pactos.destroy();
             charts.pactos = new Chart(ctxPactos, {
                 type: 'doughnut',
                 data: {
-                    labels: sortedPactos.map(p => p[0]),
+                    labels: pactosLabels,
                     datasets: [{
-                        data: sortedPactos.map(p => p[1]),
-                        backgroundColor: [
-                            'rgba(0, 102, 204, 0.7)',
-                            'rgba(213, 43, 30, 0.7)',
-                            'rgba(76, 175, 80, 0.7)',
-                            'rgba(255, 193, 7, 0.7)',
-                            'rgba(156, 39, 176, 0.7)',
-                            'rgba(255, 87, 34, 0.7)',
-                            'rgba(0, 188, 212, 0.7)',
-                            'rgba(96, 125, 139, 0.7)'
-                        ],
-                        borderColor: '#fff',
-                        borderWidth: 2
+                        data: pactosData,
+                        backgroundColor: ['#0066CC', '#D52B1E', '#4CAF50', '#FFC107', '#9C27B0'],
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { font: { size: 10 } }
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed;
+                                    const total = context.dataset.data.reduce((sum, current) => sum + current, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${label}: ${value} (${percentage}%)`;
+                                }
+                            }
                         }
                     }
                 }
+            }
+            );
+            
+            const tipoRegionData = {};
+            const allRegions = new Set([...Object.keys(regionCounts)]);
+            allRegions.forEach(region => {
+                const sen = DATABASE.senadores.filter(c => (REVERSE_REGIONES_MAP[c.r] || c.r) === region).length;
+                const dip = DATABASE.diputados.filter(c => (REVERSE_REGIONES_MAP[c.r] || c.r) === region).length;
+                tipoRegionData[region] = { sen, dip };
             });
-
-            // Crear gráfico comparativo Senadores vs Diputados por región
-            const regionLabels = Object.keys(regionTipoCount).slice(0, 10);
-            const ctxTipoRegion = document.getElementById('chartTipoRegion').getContext('2d');
+            const tipoRegionLabels = Object.keys(tipoRegionData).map(r => r.split(' ')[0]);
+            const senadoresByRegion = Object.values(tipoRegionData).map(d => d.sen);
+            const diputadosByRegion = Object.values(tipoRegionData).map(d => d.dip);
+            
             if (charts.tipoRegion) charts.tipoRegion.destroy();
             charts.tipoRegion = new Chart(ctxTipoRegion, {
                 type: 'bar',
                 data: {
-                    labels: regionLabels.map(r => r.length > 12 ? r.substring(0, 12) + '...' : r),
-                    datasets: [{
-                        label: 'Senadores',
-                        data: regionLabels.map(r => regionTipoCount[r].senadores),
-                        backgroundColor: 'rgba(0, 102, 204, 0.7)',
-                        borderColor: 'rgba(0, 102, 204, 1)',
-                        borderWidth: 1
-                    }, {
-                        label: 'Diputados',
-                        data: regionLabels.map(r => regionTipoCount[r].diputados),
-                        backgroundColor: 'rgba(213, 43, 30, 0.7)',
-                        borderColor: 'rgba(213, 43, 30, 1)',
-                        borderWidth: 1
-                    }]
+                    labels: tipoRegionLabels,
+                    datasets: [
+                        {
+                            label: 'Senadores',
+                            data: senadoresByRegion,
+                            backgroundColor: '#0066CC',
+                        },
+                        {
+                            label: 'Diputados',
+                            data: diputadosByRegion,
+                            backgroundColor: '#D52B1E',
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
                         x: {
+                            stacked: true,
                             ticks: {
-                                autoSkip: false,
+                                autoSkip: true,
                                 maxRotation: 45,
-                                minRotation: 45,
-                                font: { size: 10 }
+                                minRotation: 45
                             }
                         },
-                        y: { 
-                            beginAtZero: true,
-                            stacked: false
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                            labels: { font: { size: 12 } }
-                        }
+                        y: { stacked: true }
                     }
                 }
             });
-
-            // Actualizar tablas de top datos
-            updateTopStats(sortedPartidos, sortedRegiones, sortedPactos);
         }
-
-        function updateChileMap() {
-            // Contar candidatos por región
-            const regionData = {};
-            
-            allData.forEach(c => {
-                const region = c.region;
-                if (!regionData[region]) {
-                    regionData[region] = {
-                        total: 0,
-                        senadores: 0,
-                        diputados: 0,
-                        partidos: new Set(),
-                        pactos: new Set()
-                    };
-                }
-                regionData[region].total++;
-                if (c.tipo === 'Senador') {
-                    regionData[region].senadores++;
-                } else {
-                    regionData[region].diputados++;
-                }
-                if (c.partido) regionData[region].partidos.add(c.partido);
-                if (c.pacto) regionData[region].pactos.add(c.pacto);
-            });
-
-            // Función para obtener color según cantidad
-            function getColorByCount(count) {
-                if (count <= 30) return '#E3F2FD';
-                if (count <= 60) return '#90CAF9';
-                if (count <= 90) return '#42A5F5';
-                if (count <= 120) return '#1976D2';
-                return '#0D47A1';
-            }
-
-            // Actualizar cada región en el mapa
-            document.querySelectorAll('.map-region').forEach(regionElement => {
-                const regionKey = regionElement.dataset.region;
-                
-                // Buscar la región en los datos
-                let matchedRegion = null;
-                let matchedData = null;
-                
-                Object.keys(regionData).forEach(fullRegionName => {
-                    if (fullRegionName.includes(regionKey)) {
-                        matchedRegion = fullRegionName;
-                        matchedData = regionData[fullRegionName];
-                    }
+        
+        function updateTopLists(partidoCounts, regionCounts, pactoCounts) {
+            const renderList = (container, counts, total) => {
+                const sorted = Object.entries(counts).sort(([, a], [, b]) => b - a).slice(0, 5);
+                container.innerHTML = '';
+                sorted.forEach(([key, value]) => {
+                    const percentage = total > 0 ? (value / total * 100).toFixed(1) : 0;
+                    const item = document.createElement('div');
+                    item.className = 'detail-item';
+                    item.innerHTML = `
+                        <div class="detail-label">${key}</div>
+                        <div class="detail-value">${value} (${percentage}%)</div>
+                    `;
+                    container.appendChild(item);
                 });
-                
-                if (matchedData) {
-                    // Actualizar el contador
-                    const countElement = regionElement.querySelector('.region-count');
-                    if (countElement) {
-                        countElement.textContent = matchedData.total;
-                    }
-                    
-                    // Actualizar el color
-                    const regionBox = regionElement.querySelector('.region-box');
-                    if (regionBox) {
-                        regionBox.style.background = getColorByCount(matchedData.total);
-                        
-                        // Si hay muchos candidatos, cambiar color del texto
-                        if (matchedData.total > 90) {
-                            regionBox.style.color = 'white';
-                            const count = regionBox.querySelector('.region-count');
-                            if (count) {
-                                count.style.color = 'white';
-                                count.style.background = 'rgba(255,255,255,0.2)';
-                            }
-                        }
-                    }
-                    
-                    // Agregar evento click
-                    regionElement.onclick = function() {
-                        // Quitar clase active de todas las regiones
-                        document.querySelectorAll('.region-box').forEach(box => {
-                            box.classList.remove('active');
-                        });
-                        
-                        // Agregar clase active a la región seleccionada
-                        const box = regionElement.querySelector('.region-box');
-                        if (box) box.classList.add('active');
-                        
-                        // Mostrar detalles
-                        showRegionDetails(matchedRegion, matchedData);
-                    };
-                }
-            });
+            };
+
+            const allCandidates = [...DATABASE.senadores, ...DATABASE.diputados];
+            const totalCandidatos = allCandidates.length;
+
+            renderList(elements.topPartidos, partidoCounts, totalCandidatos);
+            renderList(elements.topRegiones, regionCounts, totalCandidatos);
+            renderList(elements.topPactos, pactoCounts, totalCandidatos);
         }
 
-        function showRegionDetails(regionName, data) {
-            const regionSimple = regionName.replace('REGIÓN DE ', '').replace('REGIÓN DEL ', '').replace('LA ', '');
-            const detailsBox = document.getElementById('regionDetails');
-            
-            if (detailsBox) {
-                detailsBox.innerHTML = `
-                    <h4>📍 ${regionSimple}</h4>
-                    <div class="region-stats-grid">
-                        <div class="region-stat">
-                            <div class="region-stat-value">${data.total}</div>
-                            <div class="region-stat-label">Total</div>
-                        </div>
-                        <div class="region-stat">
-                            <div class="region-stat-value" style="color: #0066CC;">${data.senadores}</div>
-                            <div class="region-stat-label">Senadores</div>
-                        </div>
-                        <div class="region-stat">
-                            <div class="region-stat-value" style="color: #D52B1E;">${data.diputados}</div>
-                            <div class="region-stat-label">Diputados</div>
-                        </div>
-                        <div class="region-stat">
-                            <div class="region-stat-value">${((data.total / allData.length) * 100).toFixed(1)}%</div>
-                            <div class="region-stat-label">Del Total</div>
-                        </div>
-                    </div>
-                    <p style="margin-top: 15px; color: #666;">
-                        <strong>${data.partidos.size}</strong> partidos y <strong>${data.pactos.size}</strong> pactos presentes
-                    </p>
-                `;
-            }
-        }
-
-        function updateTopStats(partidos, regiones, pactos) {
-            const total = allData.length;
-            
-            // Top Partidos
-            document.getElementById('topPartidos').innerHTML = partidos.slice(0, 5).map(p => `
-                <div class="detail-item">
-                    <span class="detail-label">${p[0]}</span>
-                    <span class="detail-value">${p[1]} candidatos</span>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: ${(p[1] / total * 100).toFixed(1)}%"></div>
-                </div>
-            `).join('');
-            
-            // Top Regiones
-            document.getElementById('topRegiones').innerHTML = regiones.slice(0, 5).map(r => `
-                <div class="detail-item">
-                    <span class="detail-label">${r[0]}</span>
-                    <span class="detail-value">${r[1]} candidatos</span>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: ${(r[1] / total * 100).toFixed(1)}%"></div>
-                </div>
-            `).join('');
-            
-            // Top Pactos
-            document.getElementById('topPactos').innerHTML = pactos.slice(0, 5).map(p => `
-                <div class="detail-item">
-                    <span class="detail-label">${p[0]}</span>
-                    <span class="detail-value">${p[1]} candidatos</span>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: ${(p[1] / total * 100).toFixed(1)}%"></div>
-                </div>
-            `).join('');
-        }
-
-        function updateFiltersOptions() {
-            // Obtener valores únicos
-            const pactos = [...new Set(allData.map(c => c.pacto))].filter(Boolean).sort();
-            const partidos = [...new Set([...allData.map(c => c.partido), ...allData.map(c => c.partidoAsociado)])].filter(Boolean).sort();
-            const regiones = [...new Set(allData.map(c => c.region))].filter(Boolean).sort();
-            const ubicaciones = [...new Set(allData.map(c => c.ubicacion))].filter(Boolean).sort((a, b) => parseInt(a) - parseInt(b));
-
-            // Actualizar selectores
-            const pactoSelect = document.querySelector('.filter-select[onchange*="pacto"]');
-            pactoSelect.innerHTML = '<option value="">Todos los pactos</option>' + 
-                pactos.map(p => `<option value="${p}">${p}</option>`).join('');
-
-            const partidoSelect = document.querySelector('.filter-select[onchange*="partido"]');
-            partidoSelect.innerHTML = '<option value="">Todos los partidos</option>' + 
-                partidos.map(p => `<option value="${p}">${p}</option>`).join('');
-
-            const regionSelect = document.querySelector('.filter-select[onchange*="region"]');
-            regionSelect.innerHTML = '<option value="">Todas las regiones</option>' + 
-                regiones.map(r => `<option value="${r}">${r.replace('REGIÓN DE ', '').replace('REGIÓN DEL ', '')}</option>`).join('');
-
-            const ubicacionSelect = document.querySelector('.filter-select[onchange*="ubicacion"]');
-            ubicacionSelect.innerHTML = '<option value="">Todos</option>' + 
-                ubicaciones.map(u => `<option value="${u}">${u}</option>`).join('');
-        }
-
-        function setTab(tab) {
-            activeTab = tab;
-            currentPage = 1;
-            
-            // Actualizar UI de tabs
-            document.querySelectorAll('.tab-button').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
-            
-            applyFilters();
-        }
-
-        function updateFilter(key, value) {
-            filters[key] = value;
-            currentPage = 1;
-            applyFilters();
-        }
-
-        function applyFilters() {
-            filteredData = allData.filter(c => {
-                if (activeTab === 'senadores' && c.tipo !== 'Senador') return false;
-                if (activeTab === 'diputados' && c.tipo !== 'Diputado') return false;
-                if (filters.search && !c.nombre.toLowerCase().includes(filters.search.toLowerCase())) return false;
-                if (filters.pacto && c.pacto !== filters.pacto) return false;
-                if (filters.partido && c.partido !== filters.partido && c.partidoAsociado !== filters.partido) return false;
-                if (filters.region && c.region !== filters.region) return false;
-                if (filters.ubicacion && c.ubicacion !== filters.ubicacion) return false;
-                return true;
-            });
-
-            renderCandidates();
-        }
-
-        function renderCandidates() {
-            const start = (currentPage - 1) * itemsPerPage;
-            const end = start + itemsPerPage;
-            const page = filteredData.slice(start, end);
-
-            document.getElementById('resultsInfo').innerHTML = 
-                `Mostrando ${Math.min(start + 1, filteredData.length)}-${Math.min(end, filteredData.length)} de ${filteredData.length} candidatos`;
-
-            document.getElementById('candidatesGrid').innerHTML = page.map(c => {
-                const tipo = c.tipo.toLowerCase();
-                const nombre = c.nombre.toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-                
-                return `
-                    <div class="candidate-card ${tipo}">
-                        <h3 class="candidate-name">
-                            ${nombre}
-                            <span class="cargo-badge ${tipo}">${c.tipo}</span>
-                        </h3>
-                        ${c.partido ? `<span class="candidate-party">${c.partido}</span>` : ''}
-                        ${c.partidoAsociado ? `<span class="candidate-party">${c.partidoAsociado}</span>` : ''}
-                        <div class="candidate-info">
-                            <p>🏛️ <strong>Pacto:</strong> ${c.pacto || 'No especificado'}</p>
-                            <p>📍 <strong>Región:</strong> ${(c.region || '').replace('REGIÓN DE ', '').replace('REGIÓN DEL ', '') || 'No especificada'}</p>
-                            <p>📊 <strong>${c.tipo === 'Diputado' ? 'Distrito' : 'Circunscripción'}:</strong> ${c.ubicacion || 'No especificado'}</p>
-                            ${c.orden ? `<p>📋 <strong>Orden:</strong> ${c.orden}</p>` : ''}
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
-            renderPagination();
-        }
-
-        function renderPagination() {
-            const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-            if (totalPages <= 1) {
-                document.getElementById('pagination').innerHTML = '';
-                return;
-            }
-
-            let html = `<button onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>← Anterior</button>`;
-            
-            for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
-                html += `<button onclick="goToPage(${i})" class="${i === currentPage ? 'active' : ''}">${i}</button>`;
-            }
-            
-            html += `<button onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>Siguiente →</button>`;
-            
-            document.getElementById('pagination').innerHTML = html;
-        }
-
-        function goToPage(page) {
-            const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-            if (page >= 1 && page <= totalPages) {
-                currentPage = page;
-                renderCandidates();
-                window.scrollTo(0, 0);
-            }
-        }
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData();
+        });
     </script>
 </body>
 </html>
