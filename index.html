@@ -628,6 +628,12 @@
                     <datalist id="candidateNames"></datalist>
                 </div>
                 <div class="filter-group">
+                    <label class="filter-label">Distrito/Circunscripción</label>
+                    <select class="filter-select" id="ubicacionFilter" onchange="updateFilter('ubicacion', this.value)">
+                        <option value="">Todos los distritos</option>
+                    </select>
+                </div>
+                <div class="filter-group">
                     <label class="filter-label">Pacto</label>
                     <select class="filter-select" id="pactoFilter" onchange="updateFilter('pacto', this.value)">
                         <option value="">Todos los pactos</option>
@@ -904,6 +910,7 @@
             pactoFilter: document.getElementById('pactoFilter'),
             partidoFilter: document.getElementById('partidoFilter'),
             regionFilter: document.getElementById('regionFilter'),
+            ubicacionFilter: document.getElementById('ubicacionFilter'),
             candidatesGrid: document.getElementById('candidatesGrid'),
             resultsInfo: document.getElementById('resultsInfo'),
             pagination: document.getElementById('pagination'),
@@ -978,6 +985,7 @@
             const pactos = new Set(allCandidates.map(c => c.pc).filter(Boolean));
             const partidos = new Set(allCandidates.map(c => c.p).filter(Boolean));
             const regiones = new Set(allCandidates.map(c => c.r).filter(Boolean));
+            const ubicaciones = new Set(allCandidates.map(c => c.u).filter(Boolean));
 
             appState.totalCandidates = allCandidates.length;
             appState.senadoresCount = DATABASE.senadores.length;
@@ -988,7 +996,7 @@
             
             updateStatsUI();
             
-            populateFilters(pactos, partidos, regiones);
+            populateFilters(pactos, partidos, regiones, ubicaciones);
             updateVisualizations(allCandidates);
         }
 
@@ -1001,10 +1009,18 @@
             elements.totalRegiones.textContent = appState.regionesCount;
         }
 
-        function populateFilters(pactos, partidos, regiones) {
+        function populateFilters(pactos, partidos, regiones, ubicaciones) {
             const sortedPactos = Array.from(pactos).sort();
             const sortedPartidos = Array.from(partidos).sort();
             const sortedRegiones = Array.from(regiones).map(r => REVERSE_REGIONES_MAP[r] || r).sort();
+            const sortedUbicaciones = Array.from(ubicaciones).sort((a, b) => {
+                const aNum = parseInt(a, 10);
+                const bNum = parseInt(b, 10);
+                if (isNaN(aNum) || isNaN(bNum)) {
+                    return a.localeCompare(b);
+                }
+                return aNum - bNum;
+            });
 
             const createOptions = (select, items) => {
                 items.forEach(item => {
@@ -1014,6 +1030,9 @@
                     select.appendChild(option);
                 });
             };
+
+            elements.ubicacionFilter.innerHTML = '<option value="">Todos los distritos</option>';
+            createOptions(elements.ubicacionFilter, sortedUbicaciones);
 
             elements.pactoFilter.innerHTML = '<option value="">Todos los pactos</option>';
             createOptions(elements.pactoFilter, sortedPactos);
@@ -1046,14 +1065,15 @@
                 candidates = DATABASE.diputados;
             }
 
-            const { search, pacto, partido, region } = appState.filters;
+            const { search, pacto, partido, region, ubicacion } = appState.filters;
 
             const filtered = candidates.filter(c => {
                 const matchesSearch = !search || (c.n && c.n.toLowerCase().includes(search.toLowerCase()));
                 const matchesPacto = !pacto || (c.pc && c.pc.toLowerCase() === pacto.toLowerCase());
                 const matchesPartido = !partido || (c.p && c.p.toLowerCase() === partido.toLowerCase());
                 const matchesRegion = !region || (REVERSE_REGIONES_MAP[c.r] || c.r).toLowerCase() === region.toLowerCase();
-                return matchesSearch && matchesPacto && matchesPartido && matchesRegion;
+                const matchesUbicacion = !ubicacion || (c.u && c.u === ubicacion);
+                return matchesSearch && matchesPacto && matchesPartido && matchesRegion && matchesUbicacion;
             });
 
             appState.filteredCandidates = filtered;
